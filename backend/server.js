@@ -13,16 +13,23 @@ if (missing.length) {
   process.exit(1);
 }
 
-const allowedOrigins = process.env.CORS_ORIGINS.split(",").map((o) => o.trim());
+const allowedOrigins = (process.env.CORS_ORIGINS || "*").split(",").map((o) => o.trim());
 const app = express();
 function checkOrigin(origin, cb) {
-  if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+  if (
+    !origin ||
+    allowedOrigins.includes("*") ||
+    allowedOrigins.includes(origin) ||
+    origin.endsWith(".vercel.app")
+  ) {
+    return cb(null, true);
+  }
   return cb(Object.assign(new Error("CORS origin not allowed"), { status: 403 }));
 }
 
 app.use(cors({
   origin: checkOrigin,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(express.json());
